@@ -1,0 +1,4 @@
+live_images_full
+live_images_isolated
+initmodel
+models/face_weights.pt

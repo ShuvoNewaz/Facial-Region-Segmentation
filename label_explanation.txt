@@ -1,0 +1,18 @@
+0.background - 0
+1.face - 1
+2.left eyebrow - 2
+3.right eyebrow - 2
+4.left eye - 3
+5.right eye - 3
+6.nose - 4
+7.lower lip - 5
+8.mouth interior - 6
+9.upper lip - 5
+10.hair - 7
+11.left eyelid - 8
+12.right eyelid - 8
+13.left ear - 9
+14.right ear - 9
+15.head covering - 0
+16.glasses - 10
+17.bald patch - 1
