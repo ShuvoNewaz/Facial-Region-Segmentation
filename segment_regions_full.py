@@ -6,6 +6,7 @@ import os
 from src.pspnet import *
 import torch
 from src.data_transforms import get_transforms
+from matplotlib.gridspec import GridSpec
 
 
 cwd = os.getcwd()
@@ -63,12 +64,12 @@ def segmenter(face): # face is RGB
 
 def gridCount(n_total):
     if n_total == 0:
-        nrow, ncol = 1, 1
+        nrows, ncols = 0, 0
     else:
-        ncol = np.ceil(np.sqrt(n_total)).astype(int)
-        nrow = np.ceil(n_total / ncol).astype(int)
+        ncols = np.ceil(np.sqrt(n_total)).astype(int)
+        nrows = np.ceil(n_total / ncols).astype(int)
 
-    return nrow, ncol
+    return nrows, ncols
 
 vid = cv2.VideoCapture(0)
 while(True): 
@@ -77,34 +78,43 @@ while(True):
 
     # Extract face
 
-    face_objs = DeepFace.extract_faces(img_path = image_dir, 
-                                                # target_size = (240, 240),
-                                                detector_backend = backends[4], # Use 0 for fast inference, 4 for accurate inference.
-                                                enforce_detection=False
-                                                )
-    fig = plt.figure(figsize=(9, 9))
-    num_faces = len(face_objs)
-    nrow, ncol = gridCount(num_faces)
+    try:
+        face_objs = DeepFace.extract_faces(img_path = image_dir, 
+                                                    # target_size = (240, 240),
+                                                    detector_backend = backends[4], # Use 0 for fast inference, 4 for accurate inference.
+                                                    enforce_detection=True
+                                                    )
+        num_faces = len(face_objs)
+    except:
+        num_faces = 0
+        pass
+    fig = plt.figure(figsize=(18, 9))
+    nrows, ncols = gridCount(num_faces)
+    gs = GridSpec(nrows=max(3, nrows), ncols=ncols+3)
     if num_faces > 0:
-        for i in range(len(face_objs)):
-            facial_area = face_objs[i]['facial_area']
-            x = facial_area['x']
-            y = facial_area['y']
-            w = facial_area['w']
-            h = facial_area['h']
-            face = frame[y:y+h, x:x+w, :]
-        
-            # Show facial region
+        face_counter = 0
+        for i in range(nrows):
+            for j in range(ncols):
+                facial_area = face_objs[face_counter]['facial_area']
+                x = facial_area['x']
+                y = facial_area['y']
+                w = facial_area['w']
+                h = facial_area['h']
+                face = frame[y:y+h, x:x+w, :]
+            
+                # Show facial region
 
-            face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
-            regions = segmenter(face)
-            plt.subplot(nrow, ncol, i + 1)
-            plt.imshow(regions)
-            plt.axis('off')
-    else:
-        plt.subplot(nrow, ncol, i + 1)
-        plt.imshow(frame) # Show the whole image if face is not detected
-        plt.axis('off')
+                face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
+                regions = segmenter(face)
+                plt.subplot(gs[i+0:i+1, j+3:j+4])
+                plt.imshow(regions)
+                plt.axis('off')
+                face_counter += 1
+            
+    plt.subplot(gs[:3, :3])
+    plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)) # Show the whole image if face is not detected
+    plt.axis('off')
+    plt.tight_layout()
     
     plt.savefig(seg_dir, bbox_inches='tight')
     show_image = cv2.imread(seg_dir)

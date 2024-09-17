@@ -112,7 +112,7 @@ while(True):
 
     face_objs = DeepFace.extract_faces(img_path = image_dir, 
                                                 # target_size = (240, 240),
-                                                detector_backend = backends[0],
+                                                detector_backend = backends[0], # Use 0 for fast inference, 4 for accurate inference.
                                                 enforce_detection=False
                                                 )
     facial_area = face_objs[0]['facial_area']
