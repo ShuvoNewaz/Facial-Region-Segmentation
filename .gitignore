@@ -1,4 +1,11 @@
+.vscode
 live_images_full
 live_images_isolated
-initmodel
-models/face_weights.pt
+saved_model
+*.pt
+*.pth
+readme.ipynb
+dataset
+pretrained
+__pycache__
+cpp

@@ -3,13 +3,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from deepface import DeepFace
 import os
-from src.pspnet import *
+from src.models.pspnet.pspnet import *
 import torch
-from src.data_transforms import get_transforms
+from src.data.data_transforms import get_val_transforms
 from matplotlib.gridspec import GridSpec
 
 
 cwd = os.getcwd()
+print(cwd)
 live_image_dir = os.path.join(cwd, 'live_images_full')
 image_dir = os.path.join(live_image_dir, 'frame.jpg')
 seg_dir = os.path.join(live_image_dir, 'seg.jpg')
@@ -19,14 +20,14 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Set up the model
 
-face_extractor_checkpoint_dir = os.path.join(cwd, 'models', 'face_weights.pt')
+face_extractor_checkpoint_dir = os.path.join(cwd, "saved_model", "pspnet", "checkpoint.pt")
 face_extractor_checkpoint = torch.load(face_extractor_checkpoint_dir)
 face_extractor_model, face_extractor_optimizer = psp_model_optimizer(layers=50, num_classes=11)
 face_extractor_model.eval()
 face_extractor_model.load_state_dict(face_extractor_checkpoint['model_state_dict'])
 face_extractor_model = face_extractor_model.to(device)
 inp_size = [240, 240]
-transform = get_transforms(inp_size=inp_size)
+transform = get_val_transforms(inp_size=inp_size)
 
 
 backends = [
@@ -50,17 +51,16 @@ def segmenter(face): # face is RGB
 
     face_gray = transform(face_gray)
     face_gray = face_gray.to(device)
-    seg, yhat, main, aux = face_extractor_model(face_gray, torch.zeros(face_gray.shape).to(device))
+    with torch.no_grad():
+        seg, yhat, main, aux = face_extractor_model(face_gray)
 
     # Empty GPU utilization
 
-    seg = seg.cpu()
-    main = main.cpu()
-    aux = aux.cpu()
-    face_gray = face_gray.cpu()
-    yhat = yhat.cpu().squeeze(0)
+    face_gray = face_gray.detach().cpu()
+    seg = seg.detach().cpu()
+    yhat = yhat.detach().cpu()
 
-    return yhat
+    return yhat.squeeze(0)
 
 def gridCount(n_total):
     if n_total == 0:
@@ -72,7 +72,7 @@ def gridCount(n_total):
     return nrows, ncols
 
 vid = cv2.VideoCapture(0)
-while(True): 
+while(True):
     ret, frame = vid.read()
     cv2.imwrite(image_dir, frame)
 

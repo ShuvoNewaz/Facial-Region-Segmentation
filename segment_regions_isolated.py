@@ -3,9 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from deepface import DeepFace
 import os
-from src.pspnet import *
+from src.models.pspnet.pspnet import *
 import torch
-from src.data_transforms import get_transforms
+from src.data.data_transforms import get_val_transforms
 
 
 cwd = os.getcwd()
@@ -18,14 +18,14 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Set up the model
 
-face_extractor_checkpoint_dir = os.path.join(cwd, 'models', 'face_weights.pt')
+face_extractor_checkpoint_dir = os.path.join(cwd, "saved_model", "pspnet", "checkpoint.pt")
 face_extractor_checkpoint = torch.load(face_extractor_checkpoint_dir)
 face_extractor_model, face_extractor_optimizer = psp_model_optimizer(layers=50, num_classes=11)
 face_extractor_model.eval()
 face_extractor_model.load_state_dict(face_extractor_checkpoint['model_state_dict'])
 face_extractor_model = face_extractor_model.to(device)
 inp_size = [240, 240]
-transform = get_transforms(inp_size=inp_size)
+transform = get_val_transforms(inp_size=inp_size)
 
 extracting_face = False
 extracting_part = False
